@@ -8,7 +8,21 @@ global.test = function (name, fn) {
   catch (e) { failed++; console.log("  ✗ " + name + "\n      " + e.message); }
 };
 global.assertEq = function (actual, expected) {
-  if (actual !== expected) {
+  const sameValue = function (a, b) {
+    if (a === b) return true;
+    if (Array.isArray(a) && Array.isArray(b)) {
+      if (a.length !== b.length) return false;
+      return a.every(function (v, i) { return sameValue(v, b[i]); });
+    }
+    if (a && b && typeof a === 'object' && typeof b === 'object') {
+      const aKeys = Object.keys(a); const bKeys = Object.keys(b);
+      if (aKeys.length !== bKeys.length) return false;
+      return aKeys.every(function (k) { return Object.prototype.hasOwnProperty.call(b, k) && sameValue(a[k], b[k]); });
+    }
+    return false;
+  };
+
+  if (!sameValue(actual, expected)) {
     throw new Error("expected " + JSON.stringify(expected) + " but got " + JSON.stringify(actual));
   }
 };
